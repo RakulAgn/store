@@ -1,6 +1,5 @@
 package com.buggybot.store.controller.store;
 
-
 import com.buggybot.store.controller.common.ApiResponse;
 import com.buggybot.store.controller.store.dto.StoreDTO;
 import com.buggybot.store.controller.store.responseEntity.Store;
@@ -9,10 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.time.Instant;
@@ -20,12 +16,13 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @RestController()
+@RequestMapping("/api/store")
 public class StoreController {
 
     private static final Logger logger = LoggerFactory.getLogger(StoreController.class);
     private final List<Store> stores = new CopyOnWriteArrayList<>();
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Store>>> getStores() {
         try {
             logger.info("Fetching all stores. Total: {}", stores.size());
@@ -38,7 +35,7 @@ public class StoreController {
         }
     }
 
-    @PostMapping("/new/store")
+    @PostMapping()
     public ResponseEntity<ApiResponse<Store>> createNewStore(@Valid @RequestBody StoreDTO storeData) {
         try {
             logger.info("Store created: {}", storeData);
@@ -69,4 +66,28 @@ public class StoreController {
             return ResponseEntity.internalServerError().body(resp);
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteStore(@PathVariable UUID id) {
+        try {
+            logger.info("Deleting store with ID: {}", id);
+
+            boolean removed = stores.removeIf(store -> {
+                UUID sid = store.storeId();
+                return sid != null && sid.equals(id);
+            });
+
+            if (!removed) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(false, "Store not found", null));
+            }
+
+            return ResponseEntity.ok(new ApiResponse<>(true, "Store deleted successfully", null));
+        } catch (Exception e) {
+            logger.error("Error deleting store", e);
+            return ResponseEntity.internalServerError()
+                    .body(new ApiResponse<>(false, "Failed to delete store", null));
+        }
+    }
+
 }
