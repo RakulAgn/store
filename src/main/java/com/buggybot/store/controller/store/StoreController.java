@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,6 +35,33 @@ public class StoreController {
             return ResponseEntity.internalServerError().body(resp);
         }
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Store>> getStore(@PathVariable UUID id) {
+        try {
+            logger.info("Fetching Store Information for id: {}", id);
+
+            Optional<Store> maybeStore = stores.stream()
+                    .filter(store -> {
+                        UUID sid = store.storeId();
+                        return sid != null && sid.equals(id);
+                    })
+                    .findFirst();
+
+            if (maybeStore.isEmpty()) {
+                ApiResponse<Store> resp = new ApiResponse<>(false, "Store not found", null);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resp);
+            }
+
+            ApiResponse<Store> resp = new ApiResponse<>(true, null, maybeStore.get());
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            logger.error("Error fetching store with id: {}", id, e);
+            ApiResponse<Store> resp = new ApiResponse<>(false, "Failed to get store", null);
+            return ResponseEntity.internalServerError().body(resp);
+        }
+    }
+
 
     @PostMapping()
     public ResponseEntity<ApiResponse<Store>> createNewStore(@Valid @RequestBody StoreDTO storeData) {
