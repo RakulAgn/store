@@ -10,8 +10,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Component
 public class EndPointLogger {
@@ -32,38 +31,53 @@ public class EndPointLogger {
                 return;
             }
 
-            logger.info("=== Registered API Endpoints ===");
             Map<RequestMappingInfo, HandlerMethod> map = handlerMapping.getHandlerMethods();
+
+            // Group by controller simple name
+            Map<String, List<String>> byController = new TreeMap<>(); // TreeMap -> sorted by controller name
 
             map.forEach((info, method) -> {
                 try {
-                    // defensive null checks for conditions
+                    // defensive null checks
                     Set<String> patterns = info.getPatternsCondition() != null
                             ? info.getPatternsCondition().getPatterns()
                             : Set.of();
-                    Set<RequestMethod> httpMethods = info.getMethodsCondition() != null
-                            ? info.getMethodsCondition().getMethods()
-                            : Set.of();
+                    Set<RequestMethod> httpMethods = info.getMethodsCondition().getMethods();
 
-                    // only log your app routes
-                    String pkg = method.getBeanType() != null ? method.getBeanType().getPackageName() : "";
-                    if (pkg.startsWith("com.buggybot")) {
-                        String methods = httpMethods.isEmpty() ? "[ANY]" : httpMethods.toString();
-                        String paths = patterns.isEmpty() ? "[]" : patterns.toString();
-                        String handler = (method.getBeanType() != null ? method.getBeanType().getSimpleName() : "Unknown")
-                                + "#" + (method.getMethod() != null ? method.getMethod().getName() : "unknownMethod");
-
-                        logger.info("{} {} -> {}", methods, paths, handler);
+                    // only log your app routes (filter by package)
+                    Class<?> beanType = method.getBeanType();
+                    String pkg = beanType.getPackage() != null
+                            ? beanType.getPackageName()
+                            : "";
+                    if (!pkg.startsWith("com.buggybot")) {
+                        return; // skip non-app controllers
                     }
+
+                    String controllerName = beanType.getSimpleName();
+                    String handler = method.getMethod().getName();
+
+                    String methodsText = httpMethods.isEmpty() ? "[ANY]" : httpMethods.toString();
+                    String pathsText = patterns.isEmpty() ? "[]" : patterns.toString();
+
+                    String entry = String.format("  %s %s -> %s#%s",
+                            methodsText, pathsText, controllerName, handler);
+
+                    byController.computeIfAbsent(controllerName, k -> new ArrayList<>()).add(entry);
                 } catch (Throwable inner) {
-                    // protect the loop from unexpected mapping shapes
-                    logger.warn("Failed to log one mapping — continuing.", inner);
+                    logger.warn("Failed to process one mapping — continuing.", inner);
                 }
             });
 
+            // Print grouped output
+            logger.info("=== Registered API Endpoints (grouped by controller) ===");
+            byController.forEach((controller, entries) -> {
+                // sort entries to keep output stable
+                Collections.sort(entries);
+                logger.info("{}:", controller);
+                entries.forEach(logger::info);
+            });
             logger.info("=== End of API Endpoints ===");
         } catch (Throwable t) {
-            // absolutely never allow endpoint logging to fail startup
             logger.error("EndpointLogger encountered an error while logging endpoints — skipping endpoint logging.", t);
         }
     }
