@@ -26,11 +26,6 @@ public class StoreController {
     @Autowired()
     private StoreService storeService;
 
-//    // Constructor injection (preferred for testing and immutability)
-//    public StoreController(StoreService storeService) {
-//        this.storeService = storeService;
-//    }
-
     // GET /api/store/all
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Store>>> getStores() {
