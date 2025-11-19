@@ -1,10 +1,14 @@
 package com.buggybot.store.controller.store;
 
+import com.buggybot.store.controller.common.PaginatedResponse;
 import com.buggybot.store.controller.store.dto.StoreDTO;
 import com.buggybot.store.controller.store.repository.StoreRepository;
 import com.buggybot.store.controller.store.responseEntity.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -22,6 +26,24 @@ public class StoreServiceImpl {
 
     public List<Store> getAllStores() {
         return storeRepository.findAll();
+    }
+
+    public PaginatedResponse<Store> getStoresPaginated(int page, int size) {
+        // Convert 1-based page to 0-based for Spring Data
+        int zeroBasedPage = page - 1;
+        Pageable pageable = PageRequest.of(zeroBasedPage, size);
+        Page<Store> storePage = storeRepository.findAll(pageable);
+
+        // Return response with 1-based page number
+        return new PaginatedResponse<>(
+                storePage.getContent(),
+                page, // Return the original 1-based page number
+                storePage.getSize(),
+                storePage.getTotalElements(),
+                storePage.getTotalPages(),
+                storePage.isFirst(),
+                storePage.isLast()
+        );
     }
 
     public Optional<Store> getStoreById(UUID id) {

@@ -1,6 +1,7 @@
 package com.buggybot.store.controller.store;
 
 import com.buggybot.store.controller.common.ApiResponse;
+import com.buggybot.store.controller.common.PaginatedResponse;
 import com.buggybot.store.controller.store.dto.StoreDTO;
 import com.buggybot.store.controller.store.responseEntity.Store;
 import jakarta.validation.Valid;
@@ -28,11 +29,23 @@ public class StoreController {
 
     // GET /api/store/all
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<Store>>> getStores() {
+    public ResponseEntity<ApiResponse<PaginatedResponse<Store>>> getStores(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            List<Store> stores = storeService.getAllStores();
-            logger.info("Fetching all stores. Total: {}", stores.size());
-            return ResponseEntity.ok(new ApiResponse<>(true, null, stores));
+            if (page < 1) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, "Page number must be >= 1", null));
+            }
+            if (size < 1) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(false, "Page size must be >= 1", null));
+            }
+
+            PaginatedResponse<Store> paginatedStores = storeService.getStoresPaginated(page, size);
+            logger.info("Fetching stores - page: {}, size: {}, total elements: {}",
+                    page, size, paginatedStores.totalElements());
+            return ResponseEntity.ok(new ApiResponse<>(true, null, paginatedStores));
         } catch (Exception e) {
             logger.error("Error fetching stores", e);
             return ResponseEntity.internalServerError()
