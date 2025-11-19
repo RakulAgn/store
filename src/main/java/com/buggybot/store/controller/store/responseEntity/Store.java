@@ -45,7 +45,7 @@ public class Store {
     }
 
     // Getters and Setters
-    public UUID storeId() {
+    public UUID getStoreId() {
         return storeId;
     }
 
@@ -53,7 +53,7 @@ public class Store {
         this.storeId = storeId;
     }
 
-    public String storeName() {
+    public String getStoreName() {
         return storeName;
     }
 
@@ -61,7 +61,7 @@ public class Store {
         this.storeName = storeName;
     }
 
-    public String storeLocation() {
+    public String getStoreLocation() {
         return storeLocation;
     }
 
@@ -69,7 +69,7 @@ public class Store {
         this.storeLocation = storeLocation;
     }
 
-    public Instant storeCreatedAt() {
+    public Instant getStoreCreatedAt() {
         return storeCreatedAt;
     }
 

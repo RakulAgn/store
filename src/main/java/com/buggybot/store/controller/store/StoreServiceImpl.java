@@ -49,7 +49,7 @@ public class StoreServiceImpl implements StoreService {
         }
 
         Store savedStore = storeRepository.save(newStore);
-        logger.info("Created store {} (total={})", savedStore.storeId(), storeRepository.count());
+        logger.info("Created store {} (total={})", savedStore.getStoreId(), storeRepository.count());
         return savedStore;
     }
 
