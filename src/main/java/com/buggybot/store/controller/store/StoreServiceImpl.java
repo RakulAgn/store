@@ -1,7 +1,6 @@
 package com.buggybot.store.controller.store;
 
 import com.buggybot.store.controller.store.dto.StoreDTO;
-import com.buggybot.store.controller.store.interfaces.StoreService;
 import com.buggybot.store.controller.store.repository.StoreRepository;
 import com.buggybot.store.controller.store.responseEntity.Store;
 import org.slf4j.Logger;
@@ -12,7 +11,7 @@ import java.time.Instant;
 import java.util.*;
 
 @Service
-public class StoreServiceImpl implements StoreService {
+public class StoreServiceImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(StoreServiceImpl.class);
     private final StoreRepository storeRepository;
@@ -21,31 +20,28 @@ public class StoreServiceImpl implements StoreService {
         this.storeRepository = storeRepository;
     }
 
-    @Override
     public List<Store> getAllStores() {
         return storeRepository.findAll();
     }
 
-    @Override
     public Optional<Store> getStoreById(UUID id) {
         if (id == null) return Optional.empty();
         return storeRepository.findById(id);
     }
 
-    @Override
     public Store createStore(StoreDTO dto) {
         Store newStore = new Store();
-        newStore.setStoreName(dto.getStoreName());
-        newStore.setStoreLocation(dto.getStoreLocation());
+        newStore.setStoreName(dto.storeName());
+        newStore.setStoreLocation(dto.storeLocation());
 
         // Only set ID if provided, otherwise let JPA generate it
-        if (dto.getStoreId() != null) {
-            newStore.setStoreId(dto.getStoreId());
+        if (dto.storeId() != null) {
+            newStore.setStoreId(dto.storeId());
         }
 
         // Only set createdAt if provided, otherwise let @CreationTimestamp handle it
-        if (dto.getStoreCreatedAt() != null) {
-            newStore.setStoreCreatedAt(dto.getStoreCreatedAt());
+        if (dto.storeCreatedAt() != null) {
+            newStore.setStoreCreatedAt(dto.storeCreatedAt());
         }
 
         Store savedStore = storeRepository.save(newStore);
@@ -53,17 +49,16 @@ public class StoreServiceImpl implements StoreService {
         return savedStore;
     }
 
-    @Override
     public Optional<Store> replaceStore(UUID id, StoreDTO dto) {
         if (id == null) return Optional.empty();
 
         return storeRepository.findById(id).map(existingStore -> {
-            existingStore.setStoreName(dto.getStoreName());
-            existingStore.setStoreLocation(dto.getStoreLocation());
+            existingStore.setStoreName(dto.storeName());
+            existingStore.setStoreLocation(dto.storeLocation());
 
             // Update createdAt if provided in DTO
-            if (dto.getStoreCreatedAt() != null) {
-                existingStore.setStoreCreatedAt(dto.getStoreCreatedAt());
+            if (dto.storeCreatedAt() != null) {
+                existingStore.setStoreCreatedAt(dto.storeCreatedAt());
             }
 
             Store updatedStore = storeRepository.save(existingStore);
@@ -72,7 +67,6 @@ public class StoreServiceImpl implements StoreService {
         });
     }
 
-    @Override
     public Optional<Store> patchStore(UUID id, Map<String, Object> updates) {
         if (id == null) return Optional.empty();
 
@@ -109,7 +103,6 @@ public class StoreServiceImpl implements StoreService {
         });
     }
 
-    @Override
     public boolean deleteStore(UUID id) {
         if (id == null) return false;
 

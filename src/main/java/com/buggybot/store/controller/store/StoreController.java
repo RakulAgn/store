@@ -2,12 +2,10 @@ package com.buggybot.store.controller.store;
 
 import com.buggybot.store.controller.common.ApiResponse;
 import com.buggybot.store.controller.store.dto.StoreDTO;
-import com.buggybot.store.controller.store.interfaces.StoreService;
 import com.buggybot.store.controller.store.responseEntity.Store;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +20,11 @@ import java.util.UUID;
 public class StoreController {
 
     private static final Logger logger = LoggerFactory.getLogger(StoreController.class);
+    private final StoreServiceImpl storeService;
 
-    @Autowired()
-    private StoreService storeService;
+    public StoreController(StoreServiceImpl storeService) {
+        this.storeService = storeService;
+    }
 
     // GET /api/store/all
     @GetMapping("/all")
